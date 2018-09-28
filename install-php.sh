@@ -107,6 +107,7 @@ echo "Installing required Homebrew formulas..."
 brew update
 brew install archey
 brew install autoconf
+brew install composer
 brew install dnsmasq
 brew install httpd
 brew install libiconv
@@ -124,6 +125,9 @@ sudo brew services start httpd
 echo "Setting MariaDB to auto-start upon system boot for all users..."
 sudo brew services start mariadb
 
+echo "Setting DNSMasq to auto-start upon system boot for all users..."
+sudo brew services start dnsmasq
+
 # PHP Switcher Script
 installed sphp
 SPHP_INSTALLED=$?
@@ -135,7 +139,7 @@ if [ ! "$BREW_INSTALLED" -eq 0 ]; then
 else
     echo "PHP Switcher Script is already installed."
 fi
-sphp 7.2
+sphp 5.6
 
 LOCALHOST_8080_RESPONSE=$(curl --write-out %{http_code} --silent --insecure  --output /dev/null http://localhost:8080)
 LOCALHOST_80_RESPONSE=$(curl --write-out %{http_code} --silent --insecure  --output /dev/null http://localhost:80)
@@ -166,3 +170,57 @@ replaceline $APACHE_CONF '^DocumentRoot.*' "DocumentRoot \/Users\/$CURRENT_USERN
 
 # Change the directory for the DocumentRoot to /Users/CURRENT_USERNAME/Sites
 DOCUMENTROOT_LINE_NUM=$(grep -n '^DocumentRoot.*' /usr/local/etc/httpd/httpd.conf | cut -f1 -d:)
+
+
+
+# Set up Apache Virtual Hosts
+
+echo 'address=/.test/127.0.0.1' > /usr/local/etc/dnsmasq.conf
+sudo mkdir -v /etc/resolver
+sudo bash -c 'echo "nameserver 127.0.0.1" > /etc/resolver/test'
+
+# Install xdebug toggler
+installed xdebug
+XDEBUG_TOGGLER_INSTALLED=$?
+
+if [ ! "$XDEBUG_TOGGLER_INSTALLED" -eq 0 ]; then
+    echo "XDebug Toggler not installed; downloading and installing now..."
+    curl -L https://gist.githubusercontent.com/rhukster/073a2c1270ccb2c6868e7aced92001cf/raw > /usr/local/bin/xdebug
+    chmod +x /usr/local/bin/xdebug
+else
+    echo "XDebug Toggler is already installed."
+fi
+
+# Turn xdebug on
+xdebug on
+
+# Install PHP packages
+pecl channel-update pecl.php.net
+printf "\n" | pecl install apcu-4.0.11
+printf "\n" | pecl install yaml-1.3.1
+pecl install xdebug-2.5.5
+
+# this could be a function so that it could only be written once
+sphp 7.0
+pecl uninstall -r apcu
+printf "\n" | pecl install apcu
+pecl uninstall -r yaml
+printf "\n" | pecl install yaml
+pecl uninstall -r xdebug
+pecl install xdebug
+
+sphp 7.1
+pecl uninstall -r apcu
+printf "\n" | pecl install apcu
+pecl uninstall -r yaml
+printf "\n" | pecl install yaml
+pecl uninstall -r xdebug
+pecl install xdebug
+
+sphp 7.2
+pecl uninstall -r apcu
+printf "\n" | pecl install apcu
+pecl uninstall -r yaml
+printf "\n" | pecl install yaml
+pecl uninstall -r xdebug
+pecl install xdebug
