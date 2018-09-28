@@ -104,6 +104,7 @@ echo "Unloading native Apache service..."
 sudo launchctl unload -w /System/Library/LaunchDaemons/org.apache.httpd.plist 2>/dev/null
 
 echo "Installing required Homebrew formulas..."
+brew update
 brew install archey
 brew install autoconf
 brew install dnsmasq
@@ -117,11 +118,24 @@ brew install php@7.0
 brew install php@7.1
 brew install php@7.2
 
-echo "Setting Apache to auto-start upon system boot..."
-brew services start httpd
+echo "Setting Apache to auto-start upon system boot for all users..."
+sudo brew services start httpd
 
-echo "Setting MariaDB to auto-start upon system boot..."
-brew services start mariadb
+echo "Setting MariaDB to auto-start upon system boot for all users..."
+sudo brew services start mariadb
+
+# PHP Switcher Script
+installed sphp
+SPHP_INSTALLED=$?
+
+if [ ! "$BREW_INSTALLED" -eq 0 ]; then
+    echo "PHP Switcher Script not installed; downloading and installing now..."
+    curl -L https://gist.githubusercontent.com/rhukster/f4c04f1bf59e0b74e335ee5d186a98e2/raw > /usr/local/bin/sphp
+    chmod +x /usr/local/bin/sphp
+else
+    echo "PHP Switcher Script is already installed."
+fi
+sphp 7.2
 
 LOCALHOST_8080_RESPONSE=$(curl --write-out %{http_code} --silent --insecure  --output /dev/null http://localhost:8080)
 LOCALHOST_80_RESPONSE=$(curl --write-out %{http_code} --silent --insecure  --output /dev/null http://localhost:80)
