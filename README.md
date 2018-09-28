@@ -11,8 +11,10 @@ A script for automatically installing multiple PHP versions on macOS based on th
 -   autoconf
 -   dnsmasq
 -   httpd
+-   libiconv
 -   libyaml
 -   mariadb
+-   openldap
 -   php@5.6
 -   php@7.0
 -   php@7.1
