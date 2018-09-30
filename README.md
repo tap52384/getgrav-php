@@ -9,7 +9,6 @@ A script for automatically installing multiple PHP versions on macOS based on th
 
 ## Homebrew formulas installed
 -   autoconf
--   composer
 -   dnsmasq
 -   httpd
 -   libiconv
@@ -20,3 +19,7 @@ A script for automatically installing multiple PHP versions on macOS based on th
 -   php@7.0
 -   php@7.1
 -   php@7.2
+
+## TODO
+-   Install Composer via Curl instead of Homebrew <https://gist.github.com/vinnizworld/6896317>
+-   Finish automatic configuration of Apache 

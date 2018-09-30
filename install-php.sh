@@ -203,7 +203,11 @@ DOCUMENTROOT_LINE_NUM=$(grep -n '^DocumentRoot.*' /usr/local/etc/httpd/httpd.con
 
 # TODO: Turn off opcache for PHP 5.6 in order for it to work properly
 # https://discourse.brew.sh/t/segmentation-fault-on-mojave-http24-php56/3043/7
-replaceline /usr/local/etc/php/5.6/conf.d/ext-opcache.ini '^opcache.enabled=' 'opcache.enabled=0' 'Disabling opcache on PHP 5.6...'
+# Comments out all lines using a semi-colon
+# https://stackoverflow.com/a/2099478/1620794
+#replaceline /usr/local/etc/php/5.6/conf.d/ext-opcache.ini '^opcache.enabled=' 'opcache.enabled=0' 'Disabling opcache on PHP 5.6...'
+echo "Disabling opcache on PHP 5.6..."
+sed -i '' -e 's/^/;/' /usr/local/etc/php/5.6/conf.d/ext-opcache.ini
 
 # Add config files for apcu, xdebug, and yaml PHP packages
 # Replace the specific line in a text file with a string
