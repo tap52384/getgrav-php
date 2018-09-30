@@ -201,6 +201,10 @@ DOCUMENTROOT_LINE_NUM=$(grep -n '^DocumentRoot.*' /usr/local/etc/httpd/httpd.con
 
 # TODO: Add a handler for all files that match *.php as application/x-httpd-php
 
+# TODO: Turn off opcache for PHP 5.6 in order for it to work properly
+# https://discourse.brew.sh/t/segmentation-fault-on-mojave-http24-php56/3043/7
+replaceline /usr/local/etc/php/5.6/conf.d/ext-opcache.ini '^opcache.enabled=' 'opcache.enabled=0' 'Disabling opcache on PHP 5.6...'
+
 # Add config files for apcu, xdebug, and yaml PHP packages
 # Replace the specific line in a text file with a string
 # https://stackoverflow.com/a/13438118/1620794
@@ -296,6 +300,8 @@ pecl uninstall -r yaml
 printf "\n" | pecl install yaml
 pecl uninstall -r xdebug
 pecl install xdebug
+
+# TODO: Remove the references to apcu, yaml, and xdebug from php.ini for all versions
 
 # Install xdebug toggler
 installed xdebug
