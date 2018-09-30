@@ -179,6 +179,7 @@ replaceline $APACHE_CONF '^ServerName.*' 'ServerName localhost' 'Set ServerName 
 # Enable the mod_rewrite and vhost_alias_module module
 replaceline $APACHE_CONF '^#LoadModule rewrite_module.*' 'LoadModule rewrite_module lib/httpd/modules/mod_rewrite.so' 'Enabling the "mod_rewrite" module...'
 replaceline $APACHE_CONF '^#LoadModule whost_alias_module.*' 'LoadModule vhost_alias_module lib/httpd/modules/mod_vhost_alias.so' 'Enabling the "vhost_alias_module" module...'
+replaceline $APACHE_CONF 'httpd-vhosts.conf$' 'Include /usr/local/etc/httpd/extra/httpd-vhosts.conf' 'Set the config file for the vhosts module...'
 
 # Set user and group appropriately
 replaceline $APACHE_CONF '^User _www' "User $CURRENT_USERNAME" "Set Apache user to $CURRENT_USERNAME..."
@@ -200,7 +201,70 @@ DOCUMENTROOT_LINE_NUM=$(grep -n '^DocumentRoot.*' /usr/local/etc/httpd/httpd.con
 
 # TODO: Add a handler for all files that match *.php as application/x-httpd-php
 
+# Add config files for apcu, xdebug, and yaml PHP packages
+# Replace the specific line in a text file with a string
+# https://stackoverflow.com/a/13438118/1620794
+touch -a /usr/local/etc/php/5.6/conf.d/ext-apcu.ini
+# add blank lines to the config file
+echo "" >> /usr/local/etc/php/5.6/conf.d/ext-apcu.ini
+echo "" >> /usr/local/etc/php/5.6/conf.d/ext-apcu.ini
+echo "" >> /usr/local/etc/php/5.6/conf.d/ext-apcu.ini
+echo "" >> /usr/local/etc/php/5.6/conf.d/ext-apcu.ini
+echo "" >> /usr/local/etc/php/5.6/conf.d/ext-apcu.ini
+echo "" >> /usr/local/etc/php/5.6/conf.d/ext-apcu.ini
+sed -i '' '1s/.*/[apcu]/' /usr/local/etc/php/5.6/conf.d/ext-apcu.ini
+sed -i '' '2s/.*/extension="apcu.so"/' /usr/local/etc/php/5.6/conf.d/ext-apcu.ini
+sed -i '' '3s/.*/apc.enabled=1/' /usr/local/etc/php/5.6/conf.d/ext-apcu.ini
+sed -i '' '4s/.*/apc.shm_size=64M/' /usr/local/etc/php/5.6/conf.d/ext-apcu.ini
+sed -i '' '5s/.*/apc.ttl=7200/' /usr/local/etc/php/5.6/conf.d/ext-apcu.ini
+sed -i '' '6s/.*/apc.enable_cli=1/' /usr/local/etc/php/5.6/conf.d/ext-apcu.ini
 
+# remove any blank lines from the config file
+# https://stackoverflow.com/a/16414489/1620794
+sed -i "" '/^[[:space:]]*$/d' /usr/local/etc/php/5.6/conf.d/ext-apcu.ini
+
+# use symlinks to use the same config file for the other versions of PHP (7.0, 7.1, 7.2)
+ln -s /usr/local/etc/php/5.6/conf.d/ext-apcu.ini /usr/local/etc/php/7.0/conf.d/ext-apcu.ini
+ln -s /usr/local/etc/php/5.6/conf.d/ext-apcu.ini /usr/local/etc/php/7.1/conf.d/ext-apcu.ini
+ln -s /usr/local/etc/php/5.6/conf.d/ext-apcu.ini /usr/local/etc/php/7.2/conf.d/ext-apcu.ini
+
+touch -a /usr/local/etc/php/5.6/conf.d/ext-yaml.ini
+echo "" >> /usr/local/etc/php/5.6/conf.d/ext-yaml.ini
+echo "" >> /usr/local/etc/php/5.6/conf.d/ext-yaml.ini
+sed -i '' '1s/.*/[yaml]/' /usr/local/etc/php/5.6/conf.d/ext-yaml.ini
+sed -i '' '2s/.*/extension="yaml.so"/' /usr/local/etc/php/5.6/conf.d/ext-yaml.ini
+
+# remove any blank lines from the config file
+# https://stackoverflow.com/a/16414489/1620794
+sed -i "" '/^[[:space:]]*$/d' /usr/local/etc/php/5.6/conf.d/ext-yaml.ini
+
+# use symlinks to use the same config file for the other versions of PHP (7.0, 7.1, 7.2)
+ln -s /usr/local/etc/php/5.6/conf.d/ext-yaml.ini /usr/local/etc/php/7.0/conf.d/ext-yaml.ini
+ln -s /usr/local/etc/php/5.6/conf.d/ext-yaml.ini /usr/local/etc/php/7.1/conf.d/ext-yaml.ini
+ln -s /usr/local/etc/php/5.6/conf.d/ext-yaml.ini /usr/local/etc/php/7.2/conf.d/ext-yaml.ini
+
+touch -a /usr/local/etc/php/5.6/conf.d/ext-xdebug.ini
+echo "" >> /usr/local/etc/php/5.6/conf.d/ext-xdebug.ini
+echo "" >> /usr/local/etc/php/5.6/conf.d/ext-xdebug.ini
+echo "" >> /usr/local/etc/php/5.6/conf.d/ext-xdebug.ini
+echo "" >> /usr/local/etc/php/5.6/conf.d/ext-xdebug.ini
+echo "" >> /usr/local/etc/php/5.6/conf.d/ext-xdebug.ini
+echo "" >> /usr/local/etc/php/5.6/conf.d/ext-xdebug.ini
+sed -i '' '1s/.*/[xdebug]/' /usr/local/etc/php/5.6/conf.d/ext-xdebug.ini
+sed -i '' '2s/.*/zend_extension="xdebug.so"/' /usr/local/etc/php/5.6/conf.d/ext-xdebug.ini
+sed -i '' '3s/.*/xdebug.remote_enable=1/' /usr/local/etc/php/5.6/conf.d/ext-xdebug.ini
+sed -i '' '4s/.*/xdebug.remote_host=localhost/' /usr/local/etc/php/5.6/conf.d/ext-xdebug.ini
+sed -i '' '5s/.*/xdebug.remote_handler=dbgp/' /usr/local/etc/php/5.6/conf.d/ext-xdebug.ini
+sed -i '' '6s/.*/xdebug.remote_port=9000/' /usr/local/etc/php/5.6/conf.d/ext-xdebug.ini
+
+# remove any blank lines from the config file
+# https://stackoverflow.com/a/16414489/1620794
+sed -i "" '/^[[:space:]]*$/d' /usr/local/etc/php/5.6/conf.d/ext-xdebug.ini
+
+# use symlinks to use the same config file for the other versions of PHP (7.0, 7.1, 7.2)
+ln -s /usr/local/etc/php/5.6/conf.d/ext-xdebug.ini /usr/local/etc/php/7.0/conf.d/ext-xdebug.ini
+ln -s /usr/local/etc/php/5.6/conf.d/ext-xdebug.ini /usr/local/etc/php/7.1/conf.d/ext-xdebug.ini
+ln -s /usr/local/etc/php/5.6/conf.d/ext-xdebug.ini /usr/local/etc/php/7.2/conf.d/ext-xdebug.ini
 
 # Install PHP packages
 pecl channel-update pecl.php.net
