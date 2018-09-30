@@ -126,6 +126,10 @@ echo "Setting MariaDB to auto-start upon system boot for all users..."
 sudo brew services start mariadb
 
 echo "Setting DNSMasq to auto-start upon system boot for all users..."
+# Set up Apache Virtual Hosts
+echo 'address=/.test/127.0.0.1' > /usr/local/etc/dnsmasq.conf
+sudo mkdir -v /etc/resolver
+sudo bash -c 'echo "nameserver 127.0.0.1" > /etc/resolver/test'
 sudo brew services start dnsmasq
 
 # PHP Switcher Script
@@ -168,31 +172,35 @@ replaceline $APACHE_CONF '^Listen 8080$' 'Listen 80/' 'Change Apache port to 80.
 mkdir -p "\/Users\/$CURRENT_USERNAME\/Sites/"
 replaceline $APACHE_CONF '^DocumentRoot.*' "DocumentRoot \/Users\/$CURRENT_USERNAME\/Sites/" "Set DocumentRoot to /Users/$CURRENT_USERNAME/Sites..."
 
-# Change the directory for the DocumentRoot to /Users/CURRENT_USERNAME/Sites
+# Set the servername to localhost
+replaceline $APACHE_CONF '#ServerName www.example.com:8080' 'ServerName localhost/'
+replaceline $APACHE_CONF '^ServerName.*' 'ServerName localhost' 'Set ServerName to "localhost"...'
+
+# Enable the mod_rewrite and vhost_alias_module module
+replaceline $APACHE_CONF '^#LoadModule rewrite_module.*' 'LoadModule rewrite_module lib/httpd/modules/mod_rewrite.so' 'Enabling the "mod_rewrite" module...'
+replaceline $APACHE_CONF '^#LoadModule whost_alias_module.*' 'LoadModule vhost_alias_module lib/httpd/modules/mod_vhost_alias.so' 'Enabling the "vhost_alias_module" module...'
+
+# Set user and group appropriately
+replaceline $APACHE_CONF '^User _www' "User $CURRENT_USERNAME" "Set Apache user to $CURRENT_USERNAME..."
+replaceline $APACHE_CONF '^User daemon' "User $CURRENT_USERNAME"
+replaceline $APACHE_CONF '^Group _www' 'Group staff' 'Set Apache group to "staff"...'
+replaceline $APACHE_CONF '^Group daemon' 'Group staff'
+
+# Set index.php to load phpinfo() for the current PHP version
+echo "<?php phpinfo();" > ~/Sites/index.php
+
+# TODO: Set AllowOverride All in the correct place
+
+# TODO: Change the directory for the DocumentRoot to /Users/CURRENT_USERNAME/Sites
 DOCUMENTROOT_LINE_NUM=$(grep -n '^DocumentRoot.*' /usr/local/etc/httpd/httpd.conf | cut -f1 -d:)
 
+# TODO: Add the php modules for PHP 5.6, 7.0, 7.1 and 7.2 at the end of the list of "LoadModule"
+
+# TODO: Set the DirectoryIndex to look for index.php and index.html, in that order
+
+# TODO: Add a handler for all files that match *.php as application/x-httpd-php
 
 
-# Set up Apache Virtual Hosts
-
-echo 'address=/.test/127.0.0.1' > /usr/local/etc/dnsmasq.conf
-sudo mkdir -v /etc/resolver
-sudo bash -c 'echo "nameserver 127.0.0.1" > /etc/resolver/test'
-
-# Install xdebug toggler
-installed xdebug
-XDEBUG_TOGGLER_INSTALLED=$?
-
-if [ ! "$XDEBUG_TOGGLER_INSTALLED" -eq 0 ]; then
-    echo "XDebug Toggler not installed; downloading and installing now..."
-    curl -L https://gist.githubusercontent.com/rhukster/073a2c1270ccb2c6868e7aced92001cf/raw > /usr/local/bin/xdebug
-    chmod +x /usr/local/bin/xdebug
-else
-    echo "XDebug Toggler is already installed."
-fi
-
-# Turn xdebug on
-xdebug on
 
 # Install PHP packages
 pecl channel-update pecl.php.net
@@ -224,3 +232,18 @@ pecl uninstall -r yaml
 printf "\n" | pecl install yaml
 pecl uninstall -r xdebug
 pecl install xdebug
+
+# Install xdebug toggler
+installed xdebug
+XDEBUG_TOGGLER_INSTALLED=$?
+
+if [ ! "$XDEBUG_TOGGLER_INSTALLED" -eq 0 ]; then
+    echo "XDebug Toggler not installed; downloading and installing now..."
+    curl -L https://gist.githubusercontent.com/rhukster/073a2c1270ccb2c6868e7aced92001cf/raw > /usr/local/bin/xdebug
+    chmod +x /usr/local/bin/xdebug
+else
+    echo "XDebug Toggler is already installed."
+fi
+
+# Turn xdebug on
+xdebug on

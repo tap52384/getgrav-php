@@ -9,6 +9,7 @@ A script for automatically installing multiple PHP versions on macOS based on th
 
 ## Homebrew formulas installed
 -   autoconf
+-   composer
 -   dnsmasq
 -   httpd
 -   libiconv
