@@ -107,7 +107,6 @@ echo "Installing required Homebrew formulas..."
 brew update
 brew install archey
 brew install autoconf
-brew install composer
 brew install dnsmasq
 brew install httpd
 brew install libiconv
@@ -305,7 +304,22 @@ printf "\n" | pecl install yaml
 pecl uninstall -r xdebug
 pecl install xdebug
 
-# TODO: Remove the references to apcu, yaml, and xdebug from php.ini for all versions
+# Remove the references to apcu, yaml, and xdebug from php.ini for all versions
+sed -e '/^zend_extension="xdebug.so"/ s/^zend_extension="xdebug.so"//g' -i '' /usr/local/etc/php/5.6/php.ini
+sed -e '/^extension="yaml.so"/ s/^extension="yaml.so"//g' -i '' /usr/local/etc/php/5.6/php.ini
+sed -e '/^extension="apcu.so"/ s/^extension="apcu.so"//g' -i '' /usr/local/etc/php/5.6/php.ini
+
+sed -e '/^zend_extension="xdebug.so"/ s/^zend_extension="xdebug.so"//g' -i '' /usr/local/etc/php/7.0/php.ini
+sed -e '/^extension="yaml.so"/ s/^extension="yaml.so"//g' -i '' /usr/local/etc/php/7.0/php.ini
+sed -e '/^extension="apcu.so"/ s/^extension="apcu.so"//g' -i '' /usr/local/etc/php/7.0/php.ini
+
+sed -e '/^zend_extension="xdebug.so"/ s/^zend_extension="xdebug.so"//g' -i '' /usr/local/etc/php/7.1/php.ini
+sed -e '/^extension="yaml.so"/ s/^extension="yaml.so"//g' -i '' /usr/local/etc/php/7.1/php.ini
+sed -e '/^extension="apcu.so"/ s/^extension="apcu.so"//g' -i '' /usr/local/etc/php/7.1/php.ini
+
+sed -e '/^zend_extension="xdebug.so"/ s/^zend_extension="xdebug.so"//g' -i '' /usr/local/etc/php/7.2/php.ini
+sed -e '/^extension="yaml.so"/ s/^extension="yaml.so"//g' -i '' /usr/local/etc/php/7.2/php.ini
+sed -e '/^extension="apcu.so"/ s/^extension="apcu.so"//g' -i '' /usr/local/etc/php/7.2/php.ini
 
 # Install xdebug toggler
 installed xdebug
