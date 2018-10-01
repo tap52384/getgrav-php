@@ -2,30 +2,9 @@
 
 APACHE_CONF=/usr/local/etc/httpd/httpd.conf
 
-# Checks whether the specified application is available in the $PATH
-function installed() {
-    # empty case: empty string
-    if [ -z "$1" ]; then
-        return 1;
-    fi
-
-    # uses which to see if the command is in the $PATH
-    which $1 > /dev/null
-    return $?
-}
-
-# Checks whether the specified formula is installed via Homebrew
-function brew-formula-installed() {
-    # empty case: empty string
-    if [ -z "$1" ]; then
-        return 1;
-    fi
-
-    # Detect if Homebrew package is installed
-    # https://stackoverflow.com/a/20802425/1620794
-    brew ls --versions $1
-    return $?
-}
+# Detect if Homebrew package is installed
+# https://stackoverflow.com/a/20802425/1620794
+# brew ls --versions $1
 
 # Checks if the given line exists in the specified file and replaces it.
 # param: filename The file to search in
@@ -60,7 +39,7 @@ function replaceline () {
 }
 
 # 0. Detect if certain requirements are already installed
-installed brew
+which brew > /dev/null
 BREW_INSTALLED=$?
 
 # The current date and time, used for filenames
@@ -72,7 +51,7 @@ TODAY_SUFFIX=`date +%Y%m%d.%H%M%S`
 CURRENT_USERNAME=$(id -un)
 
 # Check whether Ruby is installed (should be by default on macOS)
-installed ruby
+which ruby > /dev/null
 RUBY_INSTALLED=$?
 
 # 0. If Ruby is unavailable, then you have a big problem
@@ -85,7 +64,7 @@ fi
 if [ ! "$BREW_INSTALLED" -eq 0 ]; then
     echo "Homebrew not installed; installing now..."
     ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
-    installed brew
+    which brew > /dev/null
     BREW_INSTALLED=$?
 else
     echo "Homebrew is already installed."
@@ -132,7 +111,7 @@ sudo bash -c 'echo "nameserver 127.0.0.1" > /etc/resolver/test'
 sudo brew services start dnsmasq
 
 # PHP Switcher Script
-installed sphp
+which sphp > /dev/null
 SPHP_INSTALLED=$?
 
 if [ ! "$BREW_INSTALLED" -eq 0 ]; then
@@ -143,6 +122,30 @@ else
     echo "PHP Switcher Script is already installed."
 fi
 sphp 5.6
+
+# Install xdebug toggler
+which xdebug > /dev/null
+XDEBUG_TOGGLER_INSTALLED=$?
+
+if [ ! "$XDEBUG_TOGGLER_INSTALLED" -eq 0 ]; then
+    echo "XDebug Toggler not installed; downloading and installing now..."
+    curl -L https://gist.githubusercontent.com/rhukster/073a2c1270ccb2c6868e7aced92001cf/raw > /usr/local/bin/xdebug
+    chmod +x /usr/local/bin/xdebug
+else
+    echo "XDebug Toggler is already installed."
+fi
+
+# Install PHP Composer
+which composer > /dev/null
+COMPOSER_INSTALLED=$?
+
+if [ ! "$COMPOSER_INSTALLED" -eq 0 ]; then
+    echo "Composer not installed; downloading and installing now..."
+    curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+    chmod +x /usr/local/bin/composer
+else
+    echo "Composer is already installed."
+fi
 
 LOCALHOST_8080_RESPONSE=$(curl --write-out %{http_code} --silent --insecure  --output /dev/null http://localhost:8080)
 LOCALHOST_80_RESPONSE=$(curl --write-out %{http_code} --silent --insecure  --output /dev/null http://localhost:80)
@@ -194,7 +197,8 @@ echo "<?php phpinfo();" > ~/Sites/index.php
 # TODO: Change the directory for the DocumentRoot to /Users/CURRENT_USERNAME/Sites
 DOCUMENTROOT_LINE_NUM=$(grep -n '^DocumentRoot.*' /usr/local/etc/httpd/httpd.conf | cut -f1 -d:)
 
-# TODO: Add the php modules for PHP 5.6, 7.0, 7.1 and 7.2 at the end of the list of "LoadModule"
+# TODO: Add the php modules for PHP 5.6, 7.0, 7.1 and 7.2 at the end of the list of "LoadModule",
+# only if they do not already exist
 
 # TODO: Set the DirectoryIndex to look for index.php and index.html, in that order
 
@@ -230,11 +234,6 @@ sed -i '' '6s/.*/apc.enable_cli=1/' /usr/local/etc/php/5.6/conf.d/ext-apcu.ini
 # https://stackoverflow.com/a/16414489/1620794
 sed -i "" '/^[[:space:]]*$/d' /usr/local/etc/php/5.6/conf.d/ext-apcu.ini
 
-# use symlinks to use the same config file for the other versions of PHP (7.0, 7.1, 7.2)
-ln -s /usr/local/etc/php/5.6/conf.d/ext-apcu.ini /usr/local/etc/php/7.0/conf.d/ext-apcu.ini
-ln -s /usr/local/etc/php/5.6/conf.d/ext-apcu.ini /usr/local/etc/php/7.1/conf.d/ext-apcu.ini
-ln -s /usr/local/etc/php/5.6/conf.d/ext-apcu.ini /usr/local/etc/php/7.2/conf.d/ext-apcu.ini
-
 touch -a /usr/local/etc/php/5.6/conf.d/ext-yaml.ini
 echo "" >> /usr/local/etc/php/5.6/conf.d/ext-yaml.ini
 echo "" >> /usr/local/etc/php/5.6/conf.d/ext-yaml.ini
@@ -244,11 +243,6 @@ sed -i '' '2s/.*/extension="yaml.so"/' /usr/local/etc/php/5.6/conf.d/ext-yaml.in
 # remove any blank lines from the config file
 # https://stackoverflow.com/a/16414489/1620794
 sed -i "" '/^[[:space:]]*$/d' /usr/local/etc/php/5.6/conf.d/ext-yaml.ini
-
-# use symlinks to use the same config file for the other versions of PHP (7.0, 7.1, 7.2)
-ln -s /usr/local/etc/php/5.6/conf.d/ext-yaml.ini /usr/local/etc/php/7.0/conf.d/ext-yaml.ini
-ln -s /usr/local/etc/php/5.6/conf.d/ext-yaml.ini /usr/local/etc/php/7.1/conf.d/ext-yaml.ini
-ln -s /usr/local/etc/php/5.6/conf.d/ext-yaml.ini /usr/local/etc/php/7.2/conf.d/ext-yaml.ini
 
 touch -a /usr/local/etc/php/5.6/conf.d/ext-xdebug.ini
 echo "" >> /usr/local/etc/php/5.6/conf.d/ext-xdebug.ini
@@ -268,10 +262,6 @@ sed -i '' '6s/.*/xdebug.remote_port=9000/' /usr/local/etc/php/5.6/conf.d/ext-xde
 # https://stackoverflow.com/a/16414489/1620794
 sed -i "" '/^[[:space:]]*$/d' /usr/local/etc/php/5.6/conf.d/ext-xdebug.ini
 
-# use symlinks to use the same config file for the other versions of PHP (7.0, 7.1, 7.2)
-ln -s /usr/local/etc/php/5.6/conf.d/ext-xdebug.ini /usr/local/etc/php/7.0/conf.d/ext-xdebug.ini
-ln -s /usr/local/etc/php/5.6/conf.d/ext-xdebug.ini /usr/local/etc/php/7.1/conf.d/ext-xdebug.ini
-ln -s /usr/local/etc/php/5.6/conf.d/ext-xdebug.ini /usr/local/etc/php/7.2/conf.d/ext-xdebug.ini
 
 # Install PHP packages
 pecl channel-update pecl.php.net
@@ -279,59 +269,40 @@ printf "\n" | pecl install apcu-4.0.11
 printf "\n" | pecl install yaml-1.3.1
 pecl install xdebug-2.5.5
 
-# this could be a function so that it could only be written once
-sphp 7.0
-pecl uninstall -r apcu
-printf "\n" | pecl install apcu
-pecl uninstall -r yaml
-printf "\n" | pecl install yaml
-pecl uninstall -r xdebug
-pecl install xdebug
-
-sphp 7.1
-pecl uninstall -r apcu
-printf "\n" | pecl install apcu
-pecl uninstall -r yaml
-printf "\n" | pecl install yaml
-pecl uninstall -r xdebug
-pecl install xdebug
-
-sphp 7.2
-pecl uninstall -r apcu
-printf "\n" | pecl install apcu
-pecl uninstall -r yaml
-printf "\n" | pecl install yaml
-pecl uninstall -r xdebug
-pecl install xdebug
-
-# Remove the references to apcu, yaml, and xdebug from php.ini for all versions
+# Remove the references to apcu, yaml, and xdebug from php.ini for PHP 5.6
+echo "Removed references to apcu, xdebug, and yaml from php.ini for PHP 5.6..."
 sed -e '/^zend_extension="xdebug.so"/ s/^zend_extension="xdebug.so"//g' -i '' /usr/local/etc/php/5.6/php.ini
 sed -e '/^extension="yaml.so"/ s/^extension="yaml.so"//g' -i '' /usr/local/etc/php/5.6/php.ini
 sed -e '/^extension="apcu.so"/ s/^extension="apcu.so"//g' -i '' /usr/local/etc/php/5.6/php.ini
 
-sed -e '/^zend_extension="xdebug.so"/ s/^zend_extension="xdebug.so"//g' -i '' /usr/local/etc/php/7.0/php.ini
-sed -e '/^extension="yaml.so"/ s/^extension="yaml.so"//g' -i '' /usr/local/etc/php/7.0/php.ini
-sed -e '/^extension="apcu.so"/ s/^extension="apcu.so"//g' -i '' /usr/local/etc/php/7.0/php.ini
+# this could be a function so that it could only be written once
+## declare an array variable
+declare -a SEVEN_PLUS=("7.0", "7.1", "7.2")
 
-sed -e '/^zend_extension="xdebug.so"/ s/^zend_extension="xdebug.so"//g' -i '' /usr/local/etc/php/7.1/php.ini
-sed -e '/^extension="yaml.so"/ s/^extension="yaml.so"//g' -i '' /usr/local/etc/php/7.1/php.ini
-sed -e '/^extension="apcu.so"/ s/^extension="apcu.so"//g' -i '' /usr/local/etc/php/7.1/php.ini
+for i in "${SEVEN_PLUS[@]}"
+do
+    printf "About to switch to PHP $i...\n"
+    sphp $i
+    # install apcu, yaml, and xdebug for this version of PHP
+    pecl uninstall -r apcu
+    printf "\n" | pecl install apcu
+    pecl uninstall -r yaml
+    printf "\n" | pecl install yaml
+    pecl uninstall -r xdebug
+    pecl install xdebug
 
-sed -e '/^zend_extension="xdebug.so"/ s/^zend_extension="xdebug.so"//g' -i '' /usr/local/etc/php/7.2/php.ini
-sed -e '/^extension="yaml.so"/ s/^extension="yaml.so"//g' -i '' /usr/local/etc/php/7.2/php.ini
-sed -e '/^extension="apcu.so"/ s/^extension="apcu.so"//g' -i '' /usr/local/etc/php/7.2/php.ini
+    # Remove the references to apcu, yaml, and xdebug from php.ini for each version
+    echo "Removed references to apcu, xdebug, and yaml from php.ini for PHP $i..."
+    sed -e '/^zend_extension="xdebug.so"/ s/^zend_extension="xdebug.so"//g' -i '' "/usr/local/etc/php/$i/php.ini"
+    sed -e '/^extension="yaml.so"/ s/^extension="yaml.so"//g' -i '' "/usr/local/etc/php/$i/php.ini"
+    sed -e '/^extension="apcu.so"/ s/^extension="apcu.so"//g' -i '' "/usr/local/etc/php/$i/php.ini"
 
-# Install xdebug toggler
-installed xdebug
-XDEBUG_TOGGLER_INSTALLED=$?
+    # use symlinks to use the PHP 5.6 config file for the current version
+    echo "Create symlinks to PHP 5.6 ini files for PHP $i...\n"
+    ln -s /usr/local/etc/php/5.6/conf.d/ext-yaml.ini "/usr/local/etc/php/$i/conf.d/ext-yaml.ini"
+    ln -s /usr/local/etc/php/5.6/conf.d/ext-apcu.ini "/usr/local/etc/php/$i/conf.d/ext-apcu.ini"
+    ln -s /usr/local/etc/php/5.6/conf.d/ext-xdebug.ini "/usr/local/etc/php/$i/conf.d/ext-xdebug.ini"
 
-if [ ! "$XDEBUG_TOGGLER_INSTALLED" -eq 0 ]; then
-    echo "XDebug Toggler not installed; downloading and installing now..."
-    curl -L https://gist.githubusercontent.com/rhukster/073a2c1270ccb2c6868e7aced92001cf/raw > /usr/local/bin/xdebug
-    chmod +x /usr/local/bin/xdebug
-else
-    echo "XDebug Toggler is already installed."
-fi
-
-# Turn xdebug on
-xdebug on
+    # Turn xdebug on
+    xdebug on
+done
