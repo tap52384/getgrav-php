@@ -1,6 +1,12 @@
 #!/bin/bash
 
+# Based on guide posted here:
+# https://getgrav.org/blog/macos-mojave-apache-multiple-php-versions
+
 APACHE_CONF=/usr/local/etc/httpd/httpd.conf
+
+# Get the version of macOS (Mojave is 10.14)
+MACOS_VERSION=$(defaults read loginwindow SystemVersionStampAsString)
 
 # Detect if Homebrew package is installed
 # https://stackoverflow.com/a/20802425/1620794
@@ -84,14 +90,18 @@ sudo launchctl unload -w /System/Library/LaunchDaemons/org.apache.httpd.plist 2>
 
 echo "Installing required Homebrew formulas..."
 brew update
+
+if [ "$MACOS_VERSION" = "10.14" ]; then
+        brew install libiconv
+        brew install openldap
+fi
+
 brew install archey
 brew install autoconf
 brew install dnsmasq
 brew install httpd
-brew install libiconv
 brew install libyaml
 brew install mariadb
-brew install openldap
 brew install php@5.6
 brew install php@7.0
 brew install php@7.1
@@ -195,10 +205,24 @@ echo "<?php phpinfo();" > ~/Sites/index.php
 # TODO: Set AllowOverride All in the correct place
 
 # TODO: Change the directory for the DocumentRoot to /Users/CURRENT_USERNAME/Sites
+# starts with "<Directory " but does not end with "/>" or " "/usr/local/var/www/cgi-bin">"
 DOCUMENTROOT_LINE_NUM=$(grep -n '^DocumentRoot.*' /usr/local/etc/httpd/httpd.conf | cut -f1 -d:)
+# grep for a line that starts with a string but does not start with another
+# parentheses and pipe had to be escaped in grep regex
+# https://unix.stackexchange.com/a/21765/260936
+# regex for string that starts with one thing but does not end with another
+# https://stackoverflow.com/questions/10849682/regex-for-string-that-starts-but-doesnt-end-with
+# this line selects the standard one or the one that matches the current username
+grep -n '^<Directory.*\("/usr/local/var/www"\|/Users/patricklewis/Sites\)>$' httpd.conf
+
+# this line select the first line that does not end with "/>" or " "/usr/local/var/www/cgi-bin">"
+#sed -i '' "s/^<Directory.*\(\"\/usr\/local\/var\/www\"\|\/Users\/$CURRENT_USERNAME\/Sites\)>$/<Directory \/Users\/$CURRENT_USERNAME\/Sites>/" $APACHE_CONF
+
+
 
 # TODO: Add the php modules for PHP 5.6, 7.0, 7.1 and 7.2 at the end of the list of "LoadModule",
 # only if they do not already exist
+
 
 # TODO: Set the DirectoryIndex to look for index.php and index.html, in that order
 
